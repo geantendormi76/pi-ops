@@ -48,6 +48,34 @@ function decodeEntities(text: string): string {
 		.replace(/&amp;/g, "&");
 }
 
+/** Paragraph-block paging bounds, mirroring dsh-ops' read_docx contract. */
+export const DOCX_DEFAULT_PARAGRAPHS = 200;
+export const DOCX_MAX_PARAGRAPHS_PER_CALL = 1000;
+
+export interface BlockPage {
+	text: string;
+	total: number;
+	offset: number;
+	limit: number;
+	shown: number;
+	nextOffset?: number;
+}
+
+/** Split converted body text into paragraph blocks (blank-line separated). */
+export function splitBlocks(text: string): string[] {
+	return text.split(/\n{2,}/).filter((block) => block.trim());
+}
+
+/** Page through paragraph blocks with 1-based offset/limit. */
+export function paginateBlocks(text: string, offset?: number, limit?: number): BlockPage {
+	const blocks = splitBlocks(text);
+	const start = Math.max(1, Math.floor(offset ?? 1));
+	const size = Math.min(DOCX_MAX_PARAGRAPHS_PER_CALL, Math.max(1, Math.floor(limit ?? DOCX_DEFAULT_PARAGRAPHS)));
+	const slice = blocks.slice(start - 1, start - 1 + size);
+	const nextOffset = start - 1 + slice.length < blocks.length ? start + slice.length : undefined;
+	return { text: slice.join("\n\n"), total: blocks.length, offset: start, limit: size, shown: slice.length, nextOffset };
+}
+
 /** Convert WordprocessingML (`word/document.xml`) into plain text. */
 export function docxXmlToText(xml: string): string {
 	let text = xml

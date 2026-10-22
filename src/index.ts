@@ -6,6 +6,7 @@ import { registerDiffFiles } from "./tools/diff.ts";
 import { registerReadDocx } from "./tools/docx.ts";
 import { registerReadPdf } from "./tools/pdf.ts";
 import { registerReadMany } from "./tools/read-many.ts";
+import { registerReadTable } from "./tools/table.ts";
 import { registerWinEnv } from "./tools/win-env.ts";
 
 /** Tools that already exist in pi but are not activated by default; Windows work needs them. */
@@ -54,6 +55,7 @@ export default function piOps(pi: ExtensionAPI) {
 	registerReadMany(pi);
 	registerReadPdf(pi);
 	registerReadDocx(pi);
+	registerReadTable(pi);
 	registerDiffFiles(pi);
 
 	pi.on("session_start", async (_event, ctx) => {

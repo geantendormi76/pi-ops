@@ -1,6 +1,19 @@
 import { execFileText } from "./exec.ts";
 import { clip, junkRatio } from "./text.ts";
 
+/** Page window bounds, mirroring dsh-ops' read_pdf contract (default 10, hard cap 32 per call). */
+export const PDF_DEFAULT_PAGES = 10;
+export const PDF_MAX_PAGES_PER_CALL = 32;
+/** Refuse absurd inputs instead of loading hundreds of megabytes into memory. */
+export const MAX_DOCUMENT_BYTES = 64 * 1024 * 1024;
+
+/** Convert an offset/limit window (1-based, like dsh-ops) into an explicit page list. */
+export function pageWindow(offset: number | undefined, limit: number | undefined): number[] {
+	const start = Math.max(1, Math.floor(offset ?? 1));
+	const count = Math.min(PDF_MAX_PAGES_PER_CALL, Math.max(1, Math.floor(limit ?? PDF_DEFAULT_PAGES)));
+	return Array.from({ length: count }, (_, index) => start + index);
+}
+
 /** Parse "3", "1-5", "1,4,7-9" into sorted 1-based page numbers. */
 export function parsePageRange(spec: string | undefined): number[] | undefined {
 	if (!spec || !spec.trim()) return undefined;
@@ -37,7 +50,10 @@ export function labelPages(text: string, firstPage: number, alwaysLabel = false)
 export interface PdfExtraction {
 	text: string;
 	backend: "pdftotext" | "pypdf";
-	pageCount?: number;
+	/** Exact page count when known; undefined when the window filled up, i.e. "at least". */
+	totalPages?: number;
+	observedPages: number;
+	firstPage: number;
 	empty: boolean;
 }
 
@@ -48,9 +64,13 @@ export async function extractPdfText(file: string, pages?: number[], layout = tr
 
 	const pdftotext = await execFileText("pdftotext", ["-enc", "UTF-8", ...(layout ? ["-layout"] : []), ...rangeArgs, file, "-"], 60_000);
 	if (pdftotext.code === 0) {
-		const labelled = labelPages(pdftotext.stdout.replace(/\r\n/g, "\n"), firstPage, pages !== undefined);
-		const pageCount = pages ? undefined : pdftotext.stdout.split("\f").filter((pageText, index, all) => index < all.length - 1 || pageText.trim()).length;
-		return { text: labelled, backend: "pdftotext", pageCount, empty: !labelled };
+		const raw = pdftotext.stdout.replace(/\r\n/g, "\n");
+		const labelled = labelPages(raw, firstPage, pages !== undefined);
+		// A short window means the window ran past the end, so the total is exact; a full window
+		// only proves the document has at least that many pages.
+		const observed = raw.split("\f").filter((pageText, index, all) => index < all.length - 1 || pageText.trim()).length;
+		const totalPages = pages ? (observed < pages.length ? firstPage + observed - 1 : undefined) : observed;
+		return { text: labelled, backend: "pdftotext", totalPages, observedPages: observed, firstPage, empty: !labelled };
 	}
 
 	// Fallback: python + pypdf, cached by uv (only reached when pdftotext is unavailable).
@@ -73,7 +93,7 @@ export async function extractPdfText(file: string, pages?: number[], layout = tr
 	if (pypdf.code === 0) {
 		const total = Number(/PAGES=(\d+)/.exec(pypdf.stderr)?.[1] ?? 0) || undefined;
 		const labelled = labelPages(pypdf.stdout.replace(/\r\n/g, "\n"), firstPage, pages !== undefined);
-		return { text: labelled, backend: "pypdf", pageCount: total, empty: !labelled };
+		return { text: labelled, backend: "pypdf", totalPages: total, observedPages: labelled ? labelled.split("--- page ").length - 1 : 0, firstPage, empty: !labelled };
 	}
 
 	throw new Error(
