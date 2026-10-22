@@ -1,5 +1,7 @@
 # pi-ops — 让 pi 在 Windows 上不再当 Linux 用
 
+仓库：https://github.com/geantendormi76/pi-ops ｜ 测试：`npm test`（26 条守卫 + 35 条工具）
+
 pi 的 `bash` 工具在 Windows 上走的是 Git bash（MSYS2），而模型默认会输出 Linux 习惯的命令：
 `sudo apt-get install`、`systemctl restart`、`python3`、`/home/user/...`。每一条都会失败一次，
 再重试一次，再解释一次——这才是真正浪费 token 的地方。
@@ -98,6 +100,9 @@ diff_files { a: "a.ts", b: "b.ts", context: 5 }
 "defaultProvider": "deepseek",
 "defaultModel": "deepseek-v4-pro"
 ```
+
+注意内置目录里 flash 的 id 是 `deepseek-flash`（不是 `deepseek-v4-flash`），pro 才是 `deepseek-v4-pro`；
+指定模型要带 provider：`pi --model deepseek/deepseek-flash`，否则会撞上 opencode/qwen 的同名模型。
 
 同时删掉了 `models.json` 里自定义的 `deepseek` provider 块（它把 `deepseek-flash` 的
 maxTokens 压到 8192）。删掉后走 pi 内置目录：pro/flash 都是 1M 上下文、384K 输出。
