@@ -1,6 +1,6 @@
 {
   "name": "pi-ops",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "description": "Windows-native ops layer for pi: live host facts in the system prompt, a guard that blocks Linux-only commands before they waste a turn, and budgeted file tools (read_many, read_pdf, read_docx, read_table, diff_files).",
   "keywords": [
