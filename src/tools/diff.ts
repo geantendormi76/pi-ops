@@ -83,10 +83,14 @@ export function registerDiffFiles(pi: ExtensionAPI): void {
 			await Promise.all(tempPaths.map((file) => unlink(file).catch(() => undefined)));
 
 			const label = `${params.a} vs ${beforeLabel}`;
+			// git diff names the on-disk file first and the temp/baseline second; in preview mode that
+			// means a/ is the CURRENT file and b/ is the PROPOSED content, so the labels must follow
+			// the argument order or the `-`/`+` lines read backwards.
+			const labels: [string, string] = previewing ? [params.a, beforeLabel] : [beforeLabel, params.a];
 			if (run.code > 1) {
 				return { content: [{ type: "text" as const, text: `${label}: diff failed (exit ${run.code}) ${run.stderr.trim()}` }], details: { error: "diff-failed" } };
 			}
-			const raw = relabelDiff(run.stdout.replace(/\r\n/g, "\n"), beforeLabel, params.a);
+			const raw = relabelDiff(run.stdout.replace(/\r\n/g, "\n"), ...labels);
 			if (run.code === 0 && !raw.trim()) {
 				return { content: [{ type: "text" as const, text: `${label}: no differences${identity ? ` (${identity})` : ""}.` }], details: { hunks: 0, added: 0, removed: 0 } };
 			}

@@ -72,7 +72,7 @@ pi remove git:github.com/geantendormi76/pi-ops@v0.3.0
 
 | 工具 | 后端 | 不依赖 |
 | --- | --- | --- |
-| `read_pdf` | 优先 `pdftotext`（Xpdf 4.06，随 Git for Windows 自带，`/mingw64/bin/pdftotext`）；缺失时退回 `uv run --with pypdf` | 不需要自己装 poppler、不需要 Python 环境、不需要 OCR |
+| `read_pdf` | 优先 `pdftotext`（Xpdf 4.06，随 Git for Windows 自带）；它**不在 Windows PATH 上**，所以按 `Program Files\Git\mingw64\bin` → `usr\bin` → PATH 的顺序探测并缓存；都找不到才退回 `uv run --with pypdf` | 不需要自己装 poppler、不需要 Python 环境、不需要 OCR |
 | `read_docx` | 纯 Node：自己解析 zip 中央目录 + `inflateRawSync` 解压 `word/document.xml`，再把 WordprocessingML 转文本 | 不需要 Word/LibreOffice，不需要 `unzip` |
 | `read_table` | 纯 Node：BOM 判编码（UTF-8 / UTF-16LE / UTF-16BE）+ RFC 4180 解析（引号内换行、`""` 转义）+ 行分页 | 不需要 `iconv`、不需要 Excel，不会把 GBK 静默解成乱码 |
 | `diff_files` | `git diff --no-index`，失败退回 `diff -u`；只传 `a` 时用 `git show HEAD:<file>` 取基线 | 不需要手写 `git diff` 管道 |
