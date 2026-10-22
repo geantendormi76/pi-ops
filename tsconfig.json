@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@earendil-works/pi-coding-agent": ["C:/Users/52484/.pi/agent/install/releases/1.4.0/node_modules/@earendil-works/pi-coding-agent/dist/index.d.ts"],
+      "@earendil-works/pi-ai": ["C:/Users/52484/.pi/agent/install/releases/1.4.0/node_modules/@earendil-works/pi-ai/dist/index.d.ts"],
+      "typebox": ["C:/Users/52484/.pi/agent/install/releases/1.4.0/node_modules/typebox/build/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "test/**/*.mjs"]
+}

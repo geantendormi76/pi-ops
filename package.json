@@ -1,0 +1,38 @@
+{
+  "name": "pi-ops",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Windows-native ops layer for pi: live host facts in the system prompt, a guard that blocks Linux-only commands before they waste a turn, and budgeted file tools (read_many, read_pdf, read_docx, diff_files).",
+  "keywords": [
+    "pi-package",
+    "windows",
+    "powershell",
+    "bash",
+    "pdf",
+    "docx",
+    "diff"
+  ],
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-ai": "*",
+    "typebox": "*"
+  },
+  "scripts": {
+    "test": "node test/guard.test.mjs && node test/tools.test.mjs",
+    "fixtures": "node test/make-fixtures.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/geantendormi76/pi-ops.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}
