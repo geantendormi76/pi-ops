@@ -57,12 +57,52 @@ export interface PdfExtraction {
 	empty: boolean;
 }
 
+/**
+ * Candidate locations for pdftotext. Git for Windows ships it in mingw64/bin, which is on the
+ * bash tool's PATH but usually NOT on the Windows PATH the extension process inherits.
+ */
+export function pdftotextCandidates(): string[] {
+	const candidates = ["pdftotext"];
+	if (process.platform === "win32") {
+		const roots = [process.env.ProgramFiles, process.env["ProgramFiles(x86)"], process.env.LOCALAPPDATA ? `${process.env.LOCALAPPDATA}\\Programs` : undefined];
+		for (const root of roots) {
+			if (!root) continue;
+			candidates.push(`${root}\\Git\\mingw64\\bin\\pdftotext.exe`, `${root}\\Git\\usr\\bin\\pdftotext.exe`);
+		}
+	}
+	return candidates;
+}
+
+let cachedPdftotext: Promise<string | null> | undefined;
+
+/** Resolve a working pdftotext once per process; null means "fall back to pypdf". */
+export function resolvePdftotext(): Promise<string | null> {
+	if (!cachedPdftotext) {
+		cachedPdftotext = (async () => {
+			for (const candidate of pdftotextCandidates()) {
+				const probe = await execFileText(candidate, ["-v"], 10_000);
+				const banner = `${probe.stdout}${probe.stderr}`;
+				// Xpdf exits 99 for -v; both it and poppler print a version banner with the name.
+				if (/pdftotext version/i.test(banner)) return candidate;
+			}
+			return null;
+		})();
+	}
+	return cachedPdftotext;
+}
+
+/** Forget the resolved binary (used by tests and after installing Git). */
+export function resetPdftotextCache(): void {
+	cachedPdftotext = undefined;
+}
+
 /** Extract PDF text with pdftotext (ships with Git for Windows), falling back to pypdf through uv. */
 export async function extractPdfText(file: string, pages?: number[], layout = true): Promise<PdfExtraction> {
 	const firstPage = pages?.[0] ?? 1;
 	const rangeArgs = pages ? ["-f", String(pages[0]), "-l", String(pages[pages.length - 1])] : [];
 
-	const pdftotext = await execFileText("pdftotext", ["-enc", "UTF-8", ...(layout ? ["-layout"] : []), ...rangeArgs, file, "-"], 60_000);
+	const binary = await resolvePdftotext();
+	const pdftotext = binary ? await execFileText(binary, ["-enc", "UTF-8", ...(layout ? ["-layout"] : []), ...rangeArgs, file, "-"], 60_000) : { code: -1, stdout: "", stderr: "not installed" };
 	if (pdftotext.code === 0) {
 		const raw = pdftotext.stdout.replace(/\r\n/g, "\n");
 		const labelled = labelPages(raw, firstPage, pages !== undefined);

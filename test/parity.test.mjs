@@ -214,5 +214,40 @@ await check("read_table treats TSV paths as tab-delimited", async () => {
 	assert.match(textOf(result), /\| 1 \| 1 \| 2 \|/);
 });
 
+const pdfCore = await jiti.import(`${CWD}/src/tools/pdf-core.ts`);
+
+// --- pdftotext discovery (Windows PATH lacks Git's mingw64/bin) ---------
+await check("resolvePdftotext finds Git's binary even without it on PATH", async () => {
+	const savedPath = process.env.PATH;
+	const savedLocalAppData = process.env.LOCALAPPDATA;
+	process.env.PATH = "C:/Windows/system32";
+	pdfCore.resetPdftotextCache();
+	try {
+		const resolved = await pdfCore.resolvePdftotext();
+		assert.ok(resolved, "expected a pdftotext binary to be discovered");
+		assert.match(resolved, /pdftotext(\.exe)?$/i);
+		if (process.platform === "win32") assert.ok(path.isAbsolute(resolved), `expected an absolute Windows path, got ${resolved}`);
+	} finally {
+		process.env.PATH = savedPath;
+		process.env.LOCALAPPDATA = savedLocalAppData;
+		pdfCore.resetPdftotextCache();
+	}
+});
+
+await check("extractPdfText prefers pdftotext over the pypdf fallback", async () => {
+	const result = await pdfCore.extractPdfText(`${FIXTURES}/sample.pdf`, [1]);
+	assert.equal(result.backend, "pdftotext");
+	assert.match(result.text, /Hello pi-ops PDF/);
+});
+
+await check("diff_files preview labels a/ as the current file and b/ as proposed", async () => {
+	const original = readFileSync(`${CWD}/README.md`, "utf8");
+	const result = await run(diffFiles, { a: "README.md", content: `${original}\n<!-- parity check -->\n` });
+	const text = textOf(result);
+	assert.match(text, /^--- README\.md$/m, "minus lines come from the current file");
+	assert.match(text, /^\+\+\+ proposed$/m, "plus lines come from the proposed content");
+	assert.match(text, /^\+<!-- parity check -->$/m);
+});
+
 console.log(`\n${checks - failures}/${checks} parity checks passed`);
 if (failures) process.exit(1);
