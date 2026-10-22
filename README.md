@@ -41,10 +41,16 @@ C:/dev/pi-ops/
 ## 安装 / 卸载
 
 ```bash
-pi install C:/dev/pi-ops     # 已执行，写入 ~/.pi/agent/settings.json
-pi list                      # 可见最后一项为 C:\dev\pi-ops
-pi remove C:/dev/pi-ops
+pi install git:github.com/geantendormi76/pi-ops@v0.3.0   # 任意机器（推荐，锁版本）
+pi install git:github.com/geantendormi76/pi-ops          # 跟 main
+pi install C:/dev/pi-ops                                # 本机开发副本（已在 settings.json 里）
+pi list                                                  # 确认已加载
+pi remove git:github.com/geantendormi76/pi-ops@v0.3.0
 ```
+
+包本身已经是可发布形态（v0.3.0、MIT、`files` 白名单、`publishConfig.access=public`，`npm pack` 19 文件 / 31 kB），
+只是**暂未发布到 npm**（`pi-ops` 这个名字在 registry 上还空着）：需要时先 `npm login`，再
+`npm publish --access public`，之后 `pi install npm:pi-ops` 即可。
 
 安装后自动激活 pi 已内置但默认关闭的 `powershell`、`grep`、`find`、`ls`（幂等，不会关闭任何工具）。
 
