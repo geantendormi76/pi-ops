@@ -3,6 +3,18 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { execFileText } from "./exec.ts";
 
+import { createHash } from "node:crypto";
+
+/** Short content hash for "did this actually change?" checks. */
+export function shortHash(content: string): string {
+	return createHash("sha256").update(content, "utf8").digest("hex").slice(0, 12);
+}
+
+export function lineCount(content: string): number {
+	if (!content) return 0;
+	return content.split("\n").length - (content.endsWith("\n") ? 1 : 0);
+}
+
 /** Count hunks and added/removed lines in a unified diff. */
 export function summarizeDiff(diff: string): { hunks: number; added: number; removed: number } {
 	let hunks = 0;

@@ -1,17 +1,25 @@
 {
   "name": "pi-ops",
-  "version": "0.2.0",
-  "private": true,
+  "version": "0.3.0",
   "type": "module",
-  "description": "Windows-native ops layer for pi: live host facts in the system prompt, a guard that blocks Linux-only commands before they waste a turn, and budgeted file tools (read_many, read_pdf, read_docx, diff_files).",
+  "description": "Windows-native ops layer for pi: live host facts in the system prompt, a guard that blocks Linux-only commands before they waste a turn, and budgeted file tools (read_many, read_pdf, read_docx, read_table, diff_files).",
   "keywords": [
     "pi-package",
+    "pi",
     "windows",
     "powershell",
     "bash",
     "pdf",
     "docx",
+    "csv",
     "diff"
+  ],
+  "license": "MIT",
+  "author": "geantendormi76",
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
   ],
   "pi": {
     "extensions": [
@@ -23,15 +31,26 @@
     "@earendil-works/pi-ai": "*",
     "typebox": "*"
   },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-ai": {
+      "optional": true
+    }
+  },
   "scripts": {
-    "test": "node test/guard.test.mjs && node test/tools.test.mjs",
+    "test": "node test/guard.test.mjs && node test/tools.test.mjs && node test/parity.test.mjs && node test/smoke.test.mjs",
     "fixtures": "node test/make-fixtures.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/geantendormi76/pi-ops.git"
   },
-  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/geantendormi76/pi-ops/issues"
+  },
+  "homepage": "https://github.com/geantendormi76/pi-ops#readme",
   "engines": {
     "node": ">=20"
   }

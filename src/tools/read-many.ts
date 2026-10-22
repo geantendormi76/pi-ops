@@ -33,14 +33,18 @@ export function registerReadMany(pi: ExtensionAPI): void {
 			paths: Type.Array(Type.String(), { description: `Files to read (${MAX_PATHS} max), absolute or relative to cwd` }),
 			offset: Type.Optional(Type.Number({ description: "First line to return, 1-based (applies to every file)" })),
 			limit: Type.Optional(Type.Number({ description: `Max lines per file (default ${DEFAULT_LINE_LIMIT})` })),
+			start_line: Type.Optional(Type.Number({ description: "Alias for `offset` (takes precedence when given)" })),
+			end_line: Type.Optional(Type.Number({ description: "Last line to return, inclusive; overrides `limit`" })),
 			max_bytes: Type.Optional(Type.Number({ description: `Max bytes per file (default ${DEFAULT_FILE_BYTES})` })),
 			total_chars: Type.Optional(Type.Number({ description: `Total output budget in characters (default ${DEFAULT_TOTAL_CHARS})` })),
 		}),
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const cwd = ctx.cwd ?? process.cwd();
 			const requested = (params.paths ?? []).slice(0, MAX_PATHS);
-			const offset = Math.max(1, Math.floor(params.offset ?? 1));
+			const offset = Math.max(1, Math.floor(params.start_line ?? params.offset ?? 1));
 			const limit = Math.max(1, Math.floor(params.limit ?? DEFAULT_LINE_LIMIT));
+			// `end_line` (dsh-ops spelling) wins over `limit` when both are present.
+			const perFileLimit = params.end_line !== undefined ? Math.max(1, Math.floor(params.end_line) - offset + 1) : limit;
 			const maxBytes = Math.max(1000, Math.floor(params.max_bytes ?? DEFAULT_FILE_BYTES));
 			const totalChars = Math.max(2000, Math.floor(params.total_chars ?? DEFAULT_TOTAL_CHARS));
 
@@ -64,7 +68,7 @@ export function registerReadMany(pi: ExtensionAPI): void {
 						} else {
 							const lines = full.toString("utf8").split(/\r?\n/);
 							const from = offset;
-							const to = Math.min(lines.length, from + limit - 1);
+							const to = Math.min(lines.length, from + perFileLimit - 1);
 							header = `### ${display} :: lines ${from}-${to} of ${lines.length} (file is ${info.size} bytes, capped)`;
 							body = lines.slice(from - 1, to).join("\n");
 						}
@@ -75,7 +79,7 @@ export function registerReadMany(pi: ExtensionAPI): void {
 						} else {
 							const lines = buffer.toString("utf8").split(/\r?\n/);
 							const from = offset;
-							const to = Math.min(lines.length, from + limit - 1);
+							const to = Math.min(lines.length, from + perFileLimit - 1);
 							const truncated = from > 1 || to < lines.length;
 							header = `### ${display} :: lines ${from}-${to} of ${lines.length}${truncated ? " (truncated)" : ""}`;
 							body = lines.slice(from - 1, to).join("\n");

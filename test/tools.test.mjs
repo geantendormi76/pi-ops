@@ -57,7 +57,9 @@ await checkAsync("extractPdfText reads whole fixture", async () => {
 	const result = await pdf.extractPdfText(`${CWD}/test/fixtures/sample.pdf`);
 	assert.equal(result.backend, "pdftotext");
 	assert.equal(result.empty, false);
-	assert.equal(result.pageCount, 2);
+	assert.equal(result.totalPages, 2);
+	assert.equal(result.observedPages, 2);
+	assert.equal(result.firstPage, 1);
 	assert.match(result.text, /Hello pi-ops PDF/);
 	assert.match(result.text, /Second page here/);
 	assert.match(result.text, /--- page 1 ---/);
