@@ -41,14 +41,14 @@ C:/dev/pi-ops/
 ## 安装 / 卸载
 
 ```bash
-pi install git:github.com/geantendormi76/pi-ops@v0.3.0   # 任意机器（推荐，锁版本）
+pi install git:github.com/geantendormi76/pi-ops@v0.3.1   # 任意机器（推荐，锁版本）
 pi install git:github.com/geantendormi76/pi-ops          # 跟 main
 pi install C:/dev/pi-ops                                # 本机开发副本（已在 settings.json 里）
 pi list                                                  # 确认已加载
-pi remove git:github.com/geantendormi76/pi-ops@v0.3.0
+pi remove git:github.com/geantendormi76/pi-ops@v0.3.1
 ```
 
-包本身已经是可发布形态（v0.3.0、MIT、`files` 白名单、`publishConfig.access=public`，`npm pack` 19 文件 / 31 kB），
+包本身已经是可发布形态（v0.3.1、MIT、`files` 白名单、`publishConfig.access=public`，`npm pack` 19 文件 / 31 kB），
 只是**暂未发布到 npm**（`pi-ops` 这个名字在 registry 上还空着）：需要时先 `npm login`，再
 `npm publish --access public`，之后 `pi install npm:pi-ops` 即可。
 
